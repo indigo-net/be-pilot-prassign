@@ -54,15 +54,8 @@ public class UserController extends HttpServlet {
 		String jsonResponse = null;
 		switch(action) {
 		case "login":
-			String pin = request.getParameter("pin");
-			pin = pin==null ? "" : pin;
-			if(pin.equals("1111")) {
-				response.setStatus(HttpServletResponse.SC_OK);
-				jsonObject.addProperty("msg", "운영진 접속에 성공하였습니다.");
-			} else {
-				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
-				jsonObject.addProperty("msg", "유효하지 않은 PIN 번호입니다.");
-			}
+			response.setStatus(HttpServletResponse.SC_OK);
+			jsonObject.addProperty("msg", "운영진 접속에 성공하였습니다.");
 			jsonResponse = jsonObject.toString();
 			break;
 		case "list":
@@ -77,6 +70,11 @@ public class UserController extends HttpServlet {
 				jsonObject.addProperty("msg", "조회에 실패하였습니다.");
 			}
 			break;
+		case "pin":
+			response.setStatus(HttpServletResponse.SC_OK);
+			jsonObject.addProperty("msg", "PIN 번호 조회에 성공하였습니다.");
+			jsonObject.addProperty("pin", "1111");
+			jsonResponse = jsonObject.toString();
 		}
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
