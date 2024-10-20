@@ -39,12 +39,12 @@ public class UserDaoImpl implements UserDao {
 				user.setUserName(rs.getString("userName"));
 				user.setArriveTimeStamp(rs.getString("arriveTimeStamp"));
 				user.setStatus(rs.getString("status"));
-				user.setFcmToken(sql);
+				user.setFcmToken(rs.getString("fcmToken"));
 				users.add(user);
 			}
 			return users;
 		} finally {
-			util.close(con, stmt);;
+			util.close(con, stmt);
 		}
 	}
 
