@@ -9,6 +9,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -19,6 +20,8 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.messaging.FirebaseMessagingException;
 import com.google.firebase.messaging.Message;
 import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
@@ -49,6 +52,7 @@ public class UserController extends HttpServlet {
 	
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String action = request.getParameter("action");
+		System.out.println("get: "+ action);
 		action = action==null ? "" : action;
 		JsonObject jsonObject = new JsonObject();
 		String jsonResponse = null;
@@ -68,6 +72,7 @@ public class UserController extends HttpServlet {
 				e.printStackTrace();
 				response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
 				jsonObject.addProperty("msg", "조회에 실패하였습니다.");
+				jsonResponse = jsonObject.toString();
 			}
 			break;
 		case "pin":
@@ -90,14 +95,19 @@ public class UserController extends HttpServlet {
 		JsonObject jsonObject = new JsonObject();
 		String jsonResponse = null;
 		String action = jsonRequestObject.get("action").getAsString();
+		System.out.println("post: "+ jsonRequestObject.toString());
 		switch(action) {
 		case "notify":
-			String tokensJson = jsonRequestObject.get("tokens").getAsString();
-			List<String> tokens = new Gson().fromJson(tokensJson, new TypeToken<List<String>>() {}.getType());
+			JsonArray tokensArray = jsonRequestObject.get("tokens").getAsJsonArray();
+			List<String> tokens = new ArrayList<>();
+			for(JsonElement tokenElement : tokensArray) {
+				String token = tokenElement.getAsString();
+				tokens.add(token);
+			}
 			try {
 				for(String token:tokens) {
 					Message message = Message.builder()
-							.putData("게임 알림!", "게임이 곧 시작됩니다. 대기해주세요.")
+							.putData("msg", "게임이 곧 시작됩니다. 대기해주세요.")
 							.setToken(token)
 							.build();
 					String responseMessage = FirebaseMessaging.getInstance().send(message);
@@ -116,22 +126,22 @@ public class UserController extends HttpServlet {
 				String uuid = jsonRequestObject.get("uuid").getAsString();
 				String userName = jsonRequestObject.get("userName").getAsString();
 				String arriveTimeStamp = jsonRequestObject.get("arriveTimeStamp").getAsString();
-				String status = Status.READY.getName();
+				String status = Status.REST.getName();
 				String fcmToken = jsonRequestObject.get("fcmToken").getAsString();
 				
 				userService.regist(new User(uuid, userName, arriveTimeStamp, status, fcmToken));
 				response.setStatus(HttpServletResponse.SC_ACCEPTED);
 				jsonObject.addProperty("msg", "접속에 성공하였습니다.");
-				
 			} catch (Exception e) {
 				System.out.println(e.getMessage());
 				e.printStackTrace();
 				response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
 				jsonObject.addProperty("msg", "접속에 실패하였습니다.");
+				
 			}
 			break;
 		}
-	
+		jsonResponse = jsonObject.toString();
 		response.setContentType("application/json");
 		response.setCharacterEncoding("UTF-8");
 		
@@ -143,7 +153,7 @@ public class UserController extends HttpServlet {
 	
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String uuid = request.getParameter("uuid");
-		
+		System.out.println("delete: "+ uuid);
 		JsonObject jsonObject = new JsonObject();
 		try {
 			switch(uuid) {
@@ -176,26 +186,26 @@ public class UserController extends HttpServlet {
 	protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		JsonObject jsonObject = parsingJson(request);
 		String action = jsonObject.get("action").getAsString();
-		
+		System.out.println("update: "+ jsonObject.toString());
 		try {
 			switch(action) {
-			case "status":
+			case "update":
 				String uuid = jsonObject.get("uuid").getAsString();
 				String statusCode = jsonObject.get("status").getAsString();
 				String status = null;
 				switch(statusCode) {
-				case "0":
-					status = Status.WAIT.getName();
+				case "REST":
+					status = Status.REST.getName();
 					break;
-				case "1":
+				case "READY":
 					status = Status.READY.getName();
 					break;
-				case "2":
-					status = Status.RUN.getName();
+				case "GAME":
+					status = Status.GAME.getName();
 					break;
 				default:
 					System.out.println("잘못된 statusCode입니다.");
-					status = Status.WAIT.getName();
+					status = Status.REST.getName();
 					break;
 				}
 				userService.update(uuid, status);
