@@ -1,9 +1,9 @@
 package com.shuttle.users.model.dto;
 
 public enum Status {
-	WAIT("대기"),
+	REST("휴식"),
 	READY("준비"),
-	RUN("진행");
+	GAME("게임");
 	
 	private String name;
 	
