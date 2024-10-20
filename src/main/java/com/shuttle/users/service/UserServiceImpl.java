@@ -24,6 +24,20 @@ public class UserServiceImpl implements UserService {
 	public Map<String, List<User>> selectAll() {
 		try {
 			List<User> userlist = dao.selectAll();
+			for(int i=0,end=userlist.size();i<end;i++) {
+				User user = userlist.get(i);
+				switch(user.getStatus()) {
+				case "휴식":
+					user.setStatus("REST");
+					break;
+				case "준비":
+					user.setStatus("READY");
+					break;
+				case "게임":
+					user.setStatus("GAME");
+					break;
+				}
+			}
 			Map<String, List<User>> data = new HashMap<>();
 			data.put("list", userlist);
 			return data;
@@ -37,6 +51,7 @@ public class UserServiceImpl implements UserService {
 		try {
 			dao.insert(user);
 		} catch (SQLException e) {
+			e.printStackTrace();
 			throw new RuntimeException("regist SQL Exception 발생!");
 		}
 	}
